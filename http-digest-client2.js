@@ -4,6 +4,10 @@
 // Use together with HTTP Client to perform requests to servers protected
 // by digest authentication.
 //
+// Original - https://github.com/simme/node-http-digest-client
+//  (license) https://github.com/simme/node-http-digest-client/blob/master/LICENSE
+// Modifications:
+//   - ability to write body data to the request
 
 var HTTPDigest = function () {
   var crypto = require('crypto');
