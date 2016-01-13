@@ -1,0 +1,27 @@
+[
+  {
+    "server-name": "@APP_NAME",
+    "server-type": "http",
+    "group-name": "Default",
+    "enabled": true,
+    "root": "/",
+    "port": @APP_PORT,
+    "modules-database": "@APP_NAME-modules-database",
+    "content-database": "@APP_NAME-content-database",
+    "display-last-login": false,
+    "address": "0.0.0.0",
+    "backlog": 512,
+    "threads": 32,
+    "request-timeout": 30,
+    "keep-alive-timeout": 5,
+    "session-timeout": 3600,
+    "max-time-limit": 3600,
+    "default-time-limit": 600,
+    "static-expires": 3600,
+    "authentication": "@AUTHENTICATION",
+    "internal-security": true,
+    "default-user": "@DEFAULT_USER",
+    "error-handler": "@ERROR_HANDLER",
+    "url-rewriter": "@URL_REWRITER"
+  }
+]

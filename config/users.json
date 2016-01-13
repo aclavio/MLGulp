@@ -1,0 +1,34 @@
+[
+  {
+    "user-name": "@APP_NAME-user1",
+    "description": "a simple test user",
+    "password": "password",
+    "external-name": [],
+    "role": [
+      "@APP_NAME-user-role"
+    ],
+    "permission": [
+      {
+        "role-name": "@APP_NAME-user-role",
+        "capability": "read"
+      },
+      {
+        "role-name": "@APP_NAME-user-role",
+        "capability": "execute"
+      }
+    ],
+    "collection": []
+  },
+  {
+    "user-name": "@APP_NAME-user2",
+    "description": "a simple test admin",
+    "password": "password",
+    "external-name": [],
+    "role": [
+      "@APP_NAME-user-role",
+      "@APP_NAME-admin-role"
+    ],
+    "permission": [],
+    "collection": []
+  }
+]

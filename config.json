@@ -1,0 +1,14 @@
+{
+  "username": "admin",
+  "password": "MarkLogic",
+  "host": "192.168.1.3",
+  "properties": {
+    "APP_NAME": "testapp",
+    "APP_PORT": 8066,
+    "HOST_NAME": "localhost.localdomain",
+    "URL_REWRITER": "/roxy/rewrite.xqy",
+    "ERROR_HANDLER": "/roxy/error.xqy",
+    "AUTHENTICATION": "digest",
+    "DEFAULT_USER": "testapp-user1"
+  }
+}

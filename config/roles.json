@@ -1,0 +1,67 @@
+[
+  {
+    "role-name": "@APP_NAME-user-role",
+    "description": "a user of the @APP_NAME application",
+    "external-names": [],
+    "role": [
+      "rest-writer"
+    ],
+    "permission": [
+      {
+        "role-name": "rest-writer",
+        "capability": "execute"
+      }
+    ],
+    "privilege": [
+      {
+        "privilege-name": "xdmp-value",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-value",
+        "kind": "execute"
+      },
+      {
+        "privilege-name": "xdmp-add-response-header",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-add-response-header",
+        "kind": "execute"
+      },
+      {
+        "privilege-name": "xdmp-invoke",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-invoke",
+        "kind": "execute"
+      }
+    ],
+    "collection": []
+  },
+  {
+    "role-name": "@APP_NAME-admin-role",
+    "description": "an administrator of the @APP_NAME application",
+    "external-names": [],
+    "role": [
+      "rest-admin",
+      "@APP_NAME-user-role"
+    ],
+    "permission": [
+      {
+        "role-name": "rest-admin",
+        "capability": "execute"
+      }
+    ],
+    "privilege": [
+      {
+        "privilege-name": "xdmp-value",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-value",
+        "kind": "execute"
+      },
+      {
+        "privilege-name": "xdmp-add-response-header",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-add-response-header",
+        "kind": "execute"
+      },
+      {
+        "privilege-name": "xdmp-invoke",
+        "action": "http://marklogic.com/xdmp/privileges/xdmp-invoke",
+        "kind": "execute"
+      }
+    ],
+    "collection": []
+  }
+]

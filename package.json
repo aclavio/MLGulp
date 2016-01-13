@@ -1,0 +1,21 @@
+{
+  "name": "MLGulp",
+  "version": "0.1.0",
+  "description": "MarkLogic Application Deployer for Gulp",
+  "main": "index.js",
+  "dependencies": {
+    "async": "^1.5.2",
+    "gulp": "^3.9.0",
+    "gulp-replace": "^0.5.4"
+  },
+  "devDependencies": {
+    "async": "^1.5.2",
+    "gulp": "^3.9.0",
+    "gulp-replace": "^0.5.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Anthony Clavio",
+  "license": "BSD"
+}

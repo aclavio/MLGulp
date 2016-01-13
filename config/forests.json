@@ -1,0 +1,28 @@
+[
+  {
+    "forest-name": "@APP_NAME-modules-forest",
+    "host": "@HOST_NAME",
+    "data-directory": "",
+    "large-data-directory": "",
+    "fast-data-directory": "",
+    "availability": "online",
+    "rebalancer-enable": true,
+    "failover-host": [],
+    "forest-replica": [],
+    "updates-allowed": "all",
+    "enabled": true
+  },
+  {
+    "forest-name": "@APP_NAME-content-forest",
+    "host": "@HOST_NAME",
+    "data-directory": "",
+    "large-data-directory": "",
+    "fast-data-directory": "",
+    "availability": "online",
+    "rebalancer-enable": true,
+    "failover-host": [],
+    "forest-replica": [],
+    "updates-allowed": "all",
+    "enabled": true
+  }
+]

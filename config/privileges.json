@@ -1,0 +1,17 @@
+[
+  {
+    "privilege-name": "test-uri",
+    "action": "/test/",
+    "kind": "uri",
+    "role": [
+      "test-role",
+      "test-role2"
+    ]
+  },
+  {
+    "privilege-name": "test-uri2",
+    "action": "/test2/",
+    "kind": "uri",
+    "role": []
+  }
+]
