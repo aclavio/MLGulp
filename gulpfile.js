@@ -180,3 +180,20 @@ gulp.task('bootstrap-appservers', ['bootstrap-build', 'bootstrap-databases'], fu
     done();
   });
 });
+
+gulp.task('bootstrap-tasks', ['bootstrap-build', 'bootstrap-databases'], function(done){
+  var tasks = require('./build/tasks.json');
+  async.forEachOfSeries(tasks, function(task, key, cb){
+    console.log('bootstrapping scheduled task: ' + task['task-path']);
+    var body = JSON.stringify(task);
+    request('POST', mlurl + 'manage/v2/tasks?format=json&group-id=' + config.groupId, body, function() {
+      cb();
+    }, function(err) {
+      cb(err);
+    });
+  }, function(err){
+    if (err) 
+      console.log('an error occurred bootstrapping scheduled task:', err);
+    done();
+  });
+});

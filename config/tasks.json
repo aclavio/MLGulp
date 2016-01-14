@@ -1,0 +1,13 @@
+[
+  {
+    "task-enabled": true, 
+    "task-path": "/path/to/query.xqy", 
+    "task-root": "/", 
+    "task-type": "minutely", 
+    "task-period": 5,
+    "task-database": "@APP_NAME-content-database", 
+    "task-modules": "@APP_NAME-modules-database",
+    "task-priority": "normal",
+    "task-user": "admin"
+  }
+]

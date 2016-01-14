@@ -1,7 +1,8 @@
 {
   "username": "admin",
   "password": "MarkLogic",
-  "host": "192.168.1.3",
+  "host": "192.168.56.101",
+  "groupId": "Default",
   "properties": {
     "APP_NAME": "testapp",
     "APP_PORT": 8066,
