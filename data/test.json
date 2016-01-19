@@ -1,0 +1,11 @@
+{
+  "one": 1000,
+  "two": "hello world",
+  "three": [
+    "testing",
+    "one, two, three"
+  ],
+  "four": {
+    "foo": "bar"
+  }
+}

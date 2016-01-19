@@ -1,8 +1,16 @@
 {
   "username": "admin",
   "password": "MarkLogic",
-  "host": "192.168.56.101",
+  "authentication": "digest",
+  "host": "localhost",
+  "managementPort": 8002,
+  "restPort": 8006,
   "groupId": "Default",
+  "restServiceName": "testapp-rest-service",
+  "contentDatabase": "testapp-content-database",
+  "modulesDatabase": "testapp-modules-database",
+  "contentDirectory": "data",
+  "modulesDirectory": "src",
   "properties": {
     "APP_NAME": "testapp",
     "APP_PORT": 8066,

@@ -4,8 +4,8 @@
     "action": "/test/",
     "kind": "uri",
     "role": [
-      "test-role",
-      "test-role2"
+      "@APP_NAME-user-role",
+      "@APP_NAME-admin-role"
     ]
   },
   {
