@@ -2,9 +2,11 @@ var gulp = require('gulp'),
     async = require('async'),
     del = require('del'),
     fs = require('fs'),
+    path = require('path'),
     replace = require('gulp-replace'),
     request = require('request'),
-    config = require('./config.json');
+    config = require('./config.json'),
+    mlpublisher = require('./mlgulp/mlpublisher');
 
 var hostname = null;
 var manageUrl = 'http://' + config.host + ':' + config.managementPort + '/';
@@ -17,39 +19,6 @@ var auth = {
 var httpOptions = {
   "auth": auth
 }
-
-/*
-var request = function(method, urlStr, body, success, fail) {
-  //var callback = callback || function(){};
-  var urlObj = url.parse(urlStr);
-  //console.log(urlObj);
-  var req = http.request({
-    hostname: urlObj.hostname,
-    port: urlObj.port,
-    path: urlObj.path,
-    method: method,
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": "0"
-    }
-  }, body, function(res) {
-    console.log('STATUS: ' + res.statusCode);
-    var data = null;
-    res.on('data', function(resp) {
-      //console.log('resp:', resp.toString());
-      data = resp;
-    });
-    res.on('error', function(err){
-      console.log('err:', err);
-      fail(err);
-    });
-    res.on('end', function(){
-      //console.log('no response data recieved');
-      success(data);
-    });
-  });
-};
-*/
 
 gulp.task('default', ['usage']);
 
@@ -262,7 +231,7 @@ gulp.task('bootstrap-tasks', ['bootstrap-build', 'bootstrap-databases'], functio
 
 gulp.task('deploy', ['deploy-echo', 'deploy-modules', 'deploy-content']);
 
-gulp.task('create-rest-service', function(done){
+gulp.task('create-rest-service', function(done) {
   // check if the rest-api service already exists
   request(manageUrl + 'v1/rest-apis/' + config.restServiceName, {
     "auth": auth,
@@ -303,70 +272,33 @@ gulp.task('create-rest-service', function(done){
   });
 });
 
-gulp.task('deploy-echo', function(){
+gulp.task('deploy-echo', function() {
   console.log('===============================================');
   console.log('Deploying onto ' + config.host);
   console.log('  username: ' + config.username);
   console.log('===============================================');
 });
 
-gulp.task('deploy-modules', ['deploy-echo'], function(){
-  var Writable = require('stream').Writable;
-  var writer = Writable({ objectMode: true });
-  writer._write = function(chunk, enc, next) {
-    console.log(enc);
-    console.log(chunk);
-    next();
-  };
-
-  var path = './' + config.modulesDirectory + '/**';
-  console.log(path);
-  gulp.src(path)
-    .pipe(writer);
+gulp.task('deploy-modules', ['deploy-echo'], function() {
+  var modulesRoot = path.join('./', config.modulesDirectory, '/**');
+  console.log('deploying from ', modulesRoot, ' to ', config.host);
+  gulp.src(modulesRoot)
+    .pipe(mlpublisher({
+      host: config.host,
+      port: config.restPort,
+      auth: auth,
+      database: config.modulesDatabase
+    }))
 });
 
-gulp.task('deploy-content', ['deploy-echo'], function(done){
-  // TODO: utilize gulp pipe()'s
-  // TODO: recurse sub-directories
-  fs.readdir('./' + config.contentDirectory, function (err, files) {
-    if (err) {
-      done(err);
-    }
-
-    async.forEachOfSeries(files, function(file, key, cb) {
-      console.log(file);
-      var filepath = './' + config.contentDirectory + '/' + file;
-      var stat = fs.statSync(filepath);
-      if (stat.isFile()) {
-        // post the file
-        console.log('uploading file: ' + filepath);
-        request(restUrl + 'v1/documents', {
-          "method": "POST",
-          "auth": auth,
-          "headers": {
-            "Content-Type": "multipart/mixed"
-          },
-          "multipart": {
-            "chunked": false,
-            "data": [
-              {
-                "Content-Disposition": 'attachment; filename="' + file + '"',
-                "body": fs.readFileSync(filepath)
-              }
-            ]
-          }
-        }, function(err, resp, body){
-          if (err) cb(err);
-          console.log(body);
-          cb();
-        });
-      } else {
-        // not a file, skip
-        cb();
-      }
-    }, function(err) {
-      if (err) throw err;
-      done(err);
-    });
-  });
+gulp.task('deploy-content', ['deploy-echo'], function() {
+  var contentRoot = path.join('./', config.contentDirectory, '/**');
+  console.log('deploying from ', contentRoot, ' to ', config.host);
+  gulp.src(contentRoot)
+    .pipe(mlpublisher({
+      host: config.host,
+      port: config.restPort,
+      auth: auth,
+      database: config.contentDatabase
+    }))
 });
