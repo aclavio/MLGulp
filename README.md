@@ -11,10 +11,13 @@ MarkLogic Application Deployer for Gulp
 ### Deploying Application Modules and Content to Marklogic
 Deploy Modules and Content
     gulp deploy
+
 Deploy Modules
     gulp deploy-modules
+
 Deploy Content
     gulp deploy-content
+    
 
 ## Help
     gulp usage
