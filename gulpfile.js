@@ -6,7 +6,10 @@ var gulp = require('gulp'),
     replace = require('gulp-replace'),
     request = require('request'),
     config = require('./config.json'),
-    mlpublisher = require('./mlgulp/mlpublisher');
+    mlpublisher = require('./mlgulp/mlpublisher'),
+    Bootstrapper = require('./mlgulp/bootstrapper');
+
+var marklogic = new Bootstrapper(config);
 
 var hostname = null;
 var manageUrl = 'http://' + config.host + ':' + config.managementPort + '/';
@@ -19,6 +22,16 @@ var auth = {
 var httpOptions = {
   "auth": auth
 }
+
+var requestCallback = function(callback) {
+  return function(err, resp, data) {
+    if (err) {
+      callback(err);
+    } else {
+      callback();
+    }
+  }
+};
 
 gulp.task('default', ['usage']);
 
@@ -66,47 +79,21 @@ gulp.task('get-cluster-info', function(done){
 
 gulp.task('bootstrap-roles', ['bootstrap-build'], function(done){
   var roles = require('./build/roles.json');
-  async.forEachOfSeries(roles, function(role, key, cb){
-    console.log('bootstrapping role: ' + role['role-name']);
-    request(manageUrl + 'manage/v2/roles?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": role
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err) {
-    if (err) 
-      console.log('an error occurred bootstrapping roles:', err);
+  marklogic.bootstrapRoles(roles).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping roles:', err);
+    done(err);
   });
 });
 
 gulp.task('bootstrap-users', ['bootstrap-build', 'bootstrap-roles'], function(done){
-  var users = require('./build/users.json')
-  async.forEachOfSeries(users, function(user, key, cb){
-    console.log('bootstrapping user: ' + user['user-name']);
-    request(manageUrl + 'manage/v2/users?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": user
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err) {
-    if (err) 
-      console.log('an error occurred bootstrapping users:', err);
+  var users = require('./build/users.json');
+  marklogic.bootstrapUsers(users).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping users:', err);
+    done(err);
   });
 });
 
@@ -281,7 +268,7 @@ gulp.task('deploy-echo', function() {
 
 gulp.task('deploy-modules', ['deploy-echo'], function() {
   var modulesRoot = path.join('./', config.modulesDirectory, '/**');
-  console.log('deploying from ', modulesRoot, ' to ', config.host);
+  console.log('deploying from', modulesRoot, 'to', config.host, '[', config.modulesDatabase, ']');
   gulp.src(modulesRoot)
     .pipe(mlpublisher({
       host: config.host,
@@ -293,7 +280,7 @@ gulp.task('deploy-modules', ['deploy-echo'], function() {
 
 gulp.task('deploy-content', ['deploy-echo'], function() {
   var contentRoot = path.join('./', config.contentDirectory, '/**');
-  console.log('deploying from ', contentRoot, ' to ', config.host);
+  console.log('deploying from', contentRoot, 'to', config.host, '[', config.contentDatabase, ']');
   gulp.src(contentRoot)
     .pipe(mlpublisher({
       host: config.host,

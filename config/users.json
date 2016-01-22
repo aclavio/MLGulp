@@ -1,11 +1,12 @@
 [
   {
     "user-name": "@APP_NAME-user1",
-    "description": "a simple test user",
+    "description": "a simple test user!",
     "password": "password",
     "external-name": [],
     "role": [
-      "@APP_NAME-user-role"
+      "@APP_NAME-user-role",
+      "alert-user"
     ],
     "permission": [
       {
@@ -21,7 +22,7 @@
   },
   {
     "user-name": "@APP_NAME-user2",
-    "description": "a simple test admin",
+    "description": "a simple test administrator",
     "password": "password",
     "external-name": [],
     "role": [

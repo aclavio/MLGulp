@@ -1,5 +1,7 @@
-// through2 is a thin wrapper around node transform streams
-var through = require('through2');
+/*
+Publishes stream contents to MarkLogic using the MarkLogic Rest-API
+*/
+var through = require('through2'); // through2 is a thin wrapper around node transform streams
 var gutil = require('gulp-util');
 var request = require('request');
 var path = require('path');
