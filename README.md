@@ -17,10 +17,18 @@ Deploy Modules
 
 Deploy Content
     gulp deploy-content
-    
+
 
 ## Help
     gulp usage
 
 ## Configuration
 todo
+
+## Roadmap
+* Autodetect Host name(s)
+* Determine if currenlty deployed configuration items are different then items to be bootstrapped
+** bootstrap only if needed
+* Support multiple forests per host automatically
+* Clean Modules/Content Database
+* Teardown configurations

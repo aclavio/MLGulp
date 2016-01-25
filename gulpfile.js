@@ -37,7 +37,7 @@ gulp.task('default', ['usage']);
 
 gulp.task('clean', ['bootstrap-clean']);
 
-gulp.task('bootstrap', ['bootstrap-echo', 'bootstrap-roles', 'bootstrap-users', 'bootstrap-privileges', 'bootstrap-forests', 'bootstrap-databases']);
+gulp.task('bootstrap', ['bootstrap-echo', 'bootstrap-roles', 'bootstrap-users', 'bootstrap-privileges', 'bootstrap-forests', 'bootstrap-databases', 'bootstrap-appservers', 'bootstrap-tasks']);
 
 gulp.task('bootstrap-clean', function() {
   return del(['./build']);
@@ -99,120 +99,51 @@ gulp.task('bootstrap-users', ['bootstrap-build', 'bootstrap-roles'], function(do
 
 gulp.task('bootstrap-privileges', ['bootstrap-build', 'bootstrap-roles'], function(done){
   var privileges = require('./build/privileges.json');
-  async.forEachOfSeries(privileges, function(priv, key, cb){
-    console.log('bootstrapping privilege: ' + priv['privilege-name']);
-    request(manageUrl + 'manage/v2/privileges?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": priv
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err) {
-    if (err) 
-      console.log('an error occurred bootstrapping privileges:', err);
+  marklogic.bootstrapPrivileges(privileges).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping privileges:', err);
+    done(err);
   });
 });
 
 gulp.task('bootstrap-forests', ['get-cluster-info', 'bootstrap-build'], function(done){
   var forests = require('./build/forests.json');
-  async.forEachOfSeries(forests, function(forest, key, cb){
-    console.log('bootstrapping forest: ' + forest['forest-name']);
-    request(manageUrl + 'manage/v2/forests?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": forest
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err){
-    if (err) 
-      console.log('an error occurred bootstrapping forests:', err);
+  marklogic.bootstrapForests(forests).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping forests:', err);
+    done(err);
   });
 });
 
 gulp.task('bootstrap-databases', ['bootstrap-build', 'bootstrap-forests'], function(done){
   var databases = require('./build/databases.json');
-  async.forEachOfSeries(databases, function(database, key, cb){
-    console.log('bootstrapping database: ' + database['database-name']);
-    request(manageUrl + 'manage/v2/databases?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": database
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err){
-    if (err) 
-      console.log('an error occurred bootstrapping databases:', err);
+  marklogic.bootstrapDatabases(databases).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping databases:', err);
+    done(err);
   });
 });
 
 gulp.task('bootstrap-appservers', ['bootstrap-build', 'bootstrap-databases'], function(done){
   var appservers = require('./build/appservers.json');
-  async.forEachOfSeries(appservers, function(server, key, cb){
-    console.log('bootstrapping application server: ' + server['server-name']);
-    request(manageUrl + 'manage/v2/servers?format=json', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": server
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err){
-    if (err) 
-      console.log('an error occurred bootstrapping application server:', err);
+  marklogic.bootstrapAppservers(appservers).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping appservers:', err);
+    done(err);
   });
 });
 
 gulp.task('bootstrap-tasks', ['bootstrap-build', 'bootstrap-databases'], function(done){
   var tasks = require('./build/tasks.json');
-  async.forEachOfSeries(tasks, function(task, key, cb){
-    console.log('bootstrapping scheduled task: ' + task['task-path']);
-    request(manageUrl + 'manage/v2/tasks', {
-      "method": "POST",
-      "auth": auth,
-      "json": true,
-      "body": task,
-      "qs": {
-        "format": "json",
-        "group-id": config.groupId
-      }
-    }, function(err, resp, body) {
-      if (err) {
-        cb(err);
-      } else {
-        cb();
-      }
-    });
-  }, function(err){
-    if (err) 
-      console.log('an error occurred bootstrapping scheduled task:', err);
+  marklogic.bootstrapTasks(tasks).then(function() {
     done();
+  }, function(err) {
+    console.log('an error occurred bootstrapping tasks:', err);
+    done(err);
   });
 });
 
