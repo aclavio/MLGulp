@@ -28,7 +28,7 @@ todo
 ## Roadmap
 * Autodetect Host name(s)
 * Determine if currenlty deployed configuration items are different then items to be bootstrapped
-** bootstrap only if needed
+ * bootstrap only if needed
 * Support multiple forests per host automatically
 * Clean Modules/Content Database
 * Teardown configurations
