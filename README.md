@@ -32,3 +32,4 @@ todo
 * Support multiple forests per host automatically
 * Clean Modules/Content Database
 * Teardown configurations
+* Bulk deployment of content/modules
