@@ -9,13 +9,16 @@ MarkLogic Application Deployer for Gulp
     gulp boostrap
 
 ### Deploying Application Modules and Content to Marklogic
-Deploy Modules and Content
+Deploy Modules and Content:
+
     gulp deploy
 
-Deploy Modules
+Deploy Modules:
+
     gulp deploy-modules
 
-Deploy Content
+Deploy Content:
+
     gulp deploy-content
 
 
