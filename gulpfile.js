@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     fs = require('fs'),
     path = require('path'),
     replace = require('gulp-replace'),
+    watch = require('gulp-watch'),
     request = require('request'),
     config = require('./config.json'),
     mlpublisher = require('./mlgulp/mlpublisher'),
@@ -150,49 +151,34 @@ gulp.task('bootstrap-tasks', ['bootstrap-build', 'bootstrap-databases'], functio
 gulp.task('deploy', ['deploy-echo', 'deploy-modules', 'deploy-content']);
 
 gulp.task('create-rest-service', function(done) {
-  // check if the rest-api service already exists
-  request(manageUrl + 'v1/rest-apis/' + config.restServiceName, {
-    "auth": auth,
-    "json": true,
-    "qs": {
-      "format": "json",
-      "group": config.groupId
-    }
-  }, function(err, resp, body) {
-    if (err) throw err;
-    if (body && body.name === config.restServiceName) {
-      console.log('Rest API Service "' + config.restServiceName + '" already exists.  Bypassing creation...');
-      done();
-    } else {
+  marklogic.getRestService(config.restServiceName, config.groupId).then(function(data) {
+    console.log('Rest API Service "' + config.restServiceName + '" already exists.');
+    done();
+  }).catch(function(err) {
+    if (err.error.errorResponse.statusCode === 404) {
       // it doesn't exists, create it...
       console.log('creating rest api service: ' + config.restServiceName);
-      request(manageUrl + 'v1/rest-apis', {
-        "method": "POST",
-        "auth": auth,
-        "json": true,
-        "body": {
-          "rest-api": {
-            "name": config.restServiceName,
-            "port": config.restPort,
-            "group": config.groupId,
-            "database": config.contentDatabase,
-            "modules-database": config.modulesDatabase,
-            "xdbc-enabled": true
-          }
-        }
-      },
-      function(err, resp, data) {
-        if (err) throw err;
-        console.log(data);
-        done();
-      });
+      marklogic.createRestService(
+        config.restServiceName,
+        config.groupId,
+        config.restPort,
+        config.contentDatabase,
+        config.modulesDatabase).then(function(data) {
+          console.log('REST API "' + config.restServiceName + '" Created');
+        }, function(err) {
+          console.log(err.error.errorResponse);
+          done(err);
+        });
+    } else {
+      console.log(err);
+      done(err);
     }
   });
 });
 
 gulp.task('deploy-echo', function() {
   console.log('===============================================');
-  console.log('Deploying onto ' + config.host);
+  console.log('Deploying onto ' + config.host + ':' + config.restPort);
   console.log('  username: ' + config.username);
   console.log('===============================================');
 });
@@ -206,7 +192,7 @@ gulp.task('deploy-modules', ['deploy-echo'], function() {
       port: config.restPort,
       auth: auth,
       database: config.modulesDatabase
-    }))
+    }));
 });
 
 gulp.task('deploy-content', ['deploy-echo'], function() {
@@ -218,5 +204,48 @@ gulp.task('deploy-content', ['deploy-echo'], function() {
       port: config.restPort,
       auth: auth,
       database: config.contentDatabase
-    }))
+    }));
+});
+
+gulp.task('clean', ['clean-modules', 'clean-content']);
+
+gulp.task('clean-content', function(done) {
+  console.log('clearing content from ' + config.host + ':' + config.restPort + '/' + config.contentDatabase);
+  marklogic.cleanContent(config.contentDatabase).then(function(resp) {
+    done();
+  }).catch(function(err) {
+    console.log(err);
+    done(err);
+  });
+});
+
+gulp.task('clean-modules', function(done) {
+  console.log('clearing content from ' + config.host + ':' + config.restPort + '/' + config.modulesDatabase);
+  marklogic.cleanContent(config.modulesDatabase).then(function(resp) {
+    done();
+  }).catch(function(err) {
+    console.log(err);
+    done(err);
+  });
+});
+
+gulp.task('watch-echo', function() {
+  console.log('===============================================');
+  console.log('Watching for changes "' + config.modulesDirectory + '"');
+  console.log('  host:     ' + config.host + ':' + config.restPort);
+  console.log('  database: ' + config.modulesDatabase);
+  console.log('  username: ' + config.username);
+  console.log('===============================================');
+});
+
+gulp.task('watch', ['watch-echo'], function() {
+  var modulesRoot = path.join('./', config.modulesDirectory, '/**');
+  gulp.src(modulesRoot)
+    .pipe(watch(modulesRoot))
+    .pipe(mlpublisher({
+      host: config.host,
+      port: config.restPort,
+      auth: auth,
+      database: config.modulesDatabase
+    }));
 });

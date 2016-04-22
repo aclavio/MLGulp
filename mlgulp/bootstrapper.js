@@ -1,6 +1,7 @@
 var _ = require('lodash'),
     async = require('async'),
     request = require('request'),
+    rp = require('request-promise'),
     path = require('path'),
     Promise = require('promise');
 
@@ -28,6 +29,39 @@ var Bootstrapper = function(config) {
   };
   this.httpOptions = {
     "auth": this.auth
+  };
+
+  this.getRestService = function(name, group) {
+    var self = this;
+    return rp({
+      "uri": 'http://' + config.host + ':' + config.managementPort + '/v1/rest-apis/' + name,
+      "auth": self.auth,
+      "json": true,
+      "qs": {
+        "format": "json",
+        "group": group
+      }
+    });
+  };
+
+  this.createRestService = function(name, group, port, contentDB, modulesDB) {
+    var self = this;
+    return rp({
+      "uri": 'http://' + config.host + ':' + config.managementPort + '/v1/rest-apis',
+      "method": "POST",
+      "auth": self.auth,
+      "json": true,
+      "body": {
+        "rest-api": {
+          "name": name,
+          "port": port,
+          "group": group,
+          "database": contentDB,
+          "modules-database": modulesDB,
+          "xdbc-enabled": true
+        }
+      }
+    });
   };
 
   this.bootstrapRoles = function(roles) {
@@ -327,6 +361,29 @@ var Bootstrapper = function(config) {
       });
     });
   };
+
+  this.executeEval = function(script, database, vars) {
+    var form = {
+      "xquery": script
+    };
+    if (vars) form.vars = JSON.stringify(vars);
+    return rp({
+      "uri": 'http://' + config.host + ':' + config.restPort + '/v1/eval',
+      "method": "POST",
+      "auth": this.auth,
+      "qs": {
+        "database": database
+      },
+      "form": form
+    });
+  };
+
+  this.cleanContent = function(database) {
+    var script = 'xquery version "1.0-ml"; declare variable $db external; xdmp:forest-clear(xdmp:database-forests(xdmp:database($db)))';
+    return this.executeEval(script, database, {
+      db: database
+    });
+  }
 
 };
 

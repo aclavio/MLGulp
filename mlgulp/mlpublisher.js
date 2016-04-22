@@ -3,7 +3,7 @@ Publishes stream contents to MarkLogic using the MarkLogic Rest-API
 */
 var through = require('through2'); // through2 is a thin wrapper around node transform streams
 var gutil = require('gulp-util');
-var request = require('request');
+var request = require('request-promise');
 var path = require('path');
 var url = require('url');
 var PluginError = gutil.PluginError;
@@ -74,10 +74,12 @@ function gulpMLPublisher(config) {
           }
         ]
       }
-    }, function(err, resp, body){
-      if (err) cb(err, file);
-      //console.log(body);
+    }).then(function(resp){
+      //console.log('publish success', arguments);
       cb(null, file);
+    }).catch(function(err){
+      //console.log('publish failed', err);
+      cb(err, file);
     });
   });
 }
