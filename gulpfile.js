@@ -1,17 +1,13 @@
 var gulp = require('gulp'),
-    async = require('async'),
     del = require('del'),
-    fs = require('fs'),
     path = require('path'),
     replace = require('gulp-replace'),
-    watch = require('gulp-watch'),
     request = require('request'),
     config = require('./config.json'),
-    mlpublisher = require('./mlgulp/mlpublisher'),
+    MLPublisher = require('./mlgulp/mlpublisher'),
     Bootstrapper = require('./mlgulp/bootstrapper');
 
 var marklogic = new Bootstrapper(config);
-
 var hostname = null;
 var manageUrl = 'http://' + config.host + ':' + config.managementPort + '/';
 var restUrl = 'http://' + config.host + ':' + config.restPort + '/';
@@ -23,6 +19,21 @@ var auth = {
 var httpOptions = {
   "auth": auth
 }
+var modulesPublisher = new MLPublisher({
+  host: config.host,
+  port: config.restPort,
+  auth: auth,
+  database: config.modulesDatabase,
+  batchSize: config.batchSize,
+  verbose: false
+});
+var contentPublisher = new MLPublisher({
+  host: config.host,
+  port: config.restPort,
+  auth: auth,
+  database: config.contentDatabase,
+  batchSize: config.batchSize
+});
 
 var requestCallback = function(callback) {
   return function(err, resp, data) {
@@ -65,6 +76,9 @@ gulp.task('usage', function() {
   console.log("usage: $>gulp COMMAND");
   console.log(" - bootstrap");
   console.log(" - deploy");
+  console.log(" - watch");
+  console.log(" - clean");
+  console.log(" - create-rest-service");
 });
 
 gulp.task('get-cluster-info', function(done){
@@ -183,28 +197,36 @@ gulp.task('deploy-echo', function() {
   console.log('===============================================');
 });
 
-gulp.task('deploy-modules', ['deploy-echo'], function() {
+gulp.task('_deploy-modules', ['deploy-echo'], function() {
   var modulesRoot = path.join('./', config.modulesDirectory, '/**');
   console.log('deploying from', modulesRoot, 'to', config.host, '[', config.modulesDatabase, ']');
-  gulp.src(modulesRoot)
-    .pipe(mlpublisher({
-      host: config.host,
-      port: config.restPort,
-      auth: auth,
-      database: config.modulesDatabase
-    }));
+  
+  return gulp.src(modulesRoot)
+    .pipe(modulesPublisher.pipe());
 });
 
-gulp.task('deploy-content', ['deploy-echo'], function() {
+gulp.task('deploy-modules', ['_deploy-modules'], function(done) {
+  modulesPublisher.flush().then(function() {
+    done();
+  }).catch(function(err) {
+    done(err);
+  });
+});
+
+gulp.task('_deploy-content', ['deploy-echo'], function() {
   var contentRoot = path.join('./', config.contentDirectory, '/**');
   console.log('deploying from', contentRoot, 'to', config.host, '[', config.contentDatabase, ']');
-  gulp.src(contentRoot)
-    .pipe(mlpublisher({
-      host: config.host,
-      port: config.restPort,
-      auth: auth,
-      database: config.contentDatabase
-    }));
+
+  return gulp.src(contentRoot)
+    .pipe(contentPublisher.pipe());
+});
+
+gulp.task('deploy-content', ['_deploy-content'], function(done) {
+  contentPublisher.flush().then(function() {
+    done();
+  }).catch(function(err) {
+    done(err);
+  });
 });
 
 gulp.task('clean', ['clean-modules', 'clean-content']);
@@ -238,14 +260,16 @@ gulp.task('watch-echo', function() {
   console.log('===============================================');
 });
 
-gulp.task('watch', ['watch-echo'], function() {
+gulp.task('watch', ['deploy-modules', 'watch-echo'], function() {
   var modulesRoot = path.join('./', config.modulesDirectory, '/**');
-  gulp.src(modulesRoot)
-    .pipe(watch(modulesRoot))
-    .pipe(mlpublisher({
-      host: config.host,
-      port: config.restPort,
-      auth: auth,
-      database: config.modulesDatabase
-    }));
+  return gulp.watch(modulesRoot, function(event) {
+    //console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+    if (event.type === "added" || event.type === "changed") {
+      gulp.src(event.path)
+        .pipe(modulesPublisher.pipe(true));
+    } else {
+      console.error('unsupported event type: ', event.type);
+    }
+  });
 });
+

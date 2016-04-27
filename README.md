@@ -1,8 +1,6 @@
 # MLGulp
 MarkLogic Application Deployer for Gulp
 
-**please note: this application is in the early stages of development**
-
 ## Usage
 
 ### Bootstrapping a MarkLogic Server
@@ -29,7 +27,19 @@ Clean Content and Modules Database(s):
     gulp usage
 
 ## Configuration
-todo
+Configuration is stored in the config.json file
+
+    username:         MarkLogic administrator username
+    password:         MarkLogic administrator password
+    host:             ip or host name of the target MarkLogic server
+    restServiceName:  name of the Rest API service
+    contentDatabase:  name of the content database
+    modulesDatabase:  name of the modules database
+    contentDirectory: filesystem directory where content is stored
+    modulesDirectory: filesystem directory where modules are stored
+    batchSize:        number of files to be deployed in a single request
+    properties:       todo
+      
 
 ## Roadmap
 * Autodetect Host name(s)
@@ -37,4 +47,4 @@ todo
  * bootstrap only if needed
 * Support multiple forests per host automatically
 * Teardown configurations
-* Bulk deployment of content/modules
+* Set collections and permissions on deployed docs

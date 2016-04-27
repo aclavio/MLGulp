@@ -1,17 +1,33 @@
 /*
 Publishes stream contents to MarkLogic using the MarkLogic Rest-API
 */
+var _ = require('lodash');
 var through = require('through2'); // through2 is a thin wrapper around node transform streams
 var gutil = require('gulp-util');
 var request = require('request-promise');
 var path = require('path');
 var url = require('url');
+var Promise = require('promise')
 var PluginError = gutil.PluginError;
 
 // Consts
 const PLUGIN_NAME = 'gulp-mlpublisher';
 
-function gulpMLPublisher(config) {
+var validateConfig = function(config) {
+  if (!config) {
+    throw new PluginError(PLUGIN_NAME, 'Missing configuration options!');
+  } else if (!config.host) {
+    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "host"');
+  } else if (!config.port) {
+    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "port"');
+  } else if (!config.batchSize) {
+    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "batchSize"');
+  }
+};
+
+var MLPublisher = function(config) {
+
+  this.buffers = [];
 
   /* Sample configuration
   {
@@ -21,68 +37,91 @@ function gulpMLPublisher(config) {
       user: "username",
       pass: "password"
     },
-    database: "marklogic-database-name"
+    database: "marklogic-database-name",
+    batchSize: 5,
+    verbose: true
   }
   */
 
-  if (!config) {
-    throw new PluginError(PLUGIN_NAME, 'Missing configuration options!');
-  } else if (!config.host) {
-    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "host"');
-  } else if (!config.port) {
-    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "port"');
-  }
+  validateConfig(config);
+  
+  this.flush = function() {
+    if (config.verbose) console.log('flushing buffers...');
+    var scheme = config.scheme || 'http';
+    var restUrl = scheme + '://' + config.host + ':' + config.port + '/';
+    var data = _.map(this.buffers, function(file) {
+      var contents = null;
 
-  var scheme = config.scheme || 'http';
-  var restUrl = scheme + '://' + config.host + ':' + config.port + '/';
-
-  // Creating a stream through which each file will pass
-  return through.obj(function(file, enc, cb) {
-    if (file.isNull()) {
-      // return empty file
-      return cb(null, file);
-    }    
-
-    var contents = null;
-
-    if (file.isBuffer()) {
-      contents = file.contents.toString();
-    }
-    if (file.isStream()) {
-      throw new PluginError(PLUGIN_NAME, 'Streams not yet supported!');
-    }
-
-    var uri = url.parse(path.join('/', file.relative)).path;
-    console.log('uploading file: ' + uri);
-    //console.log(contents);
-
-    request(restUrl + 'v1/documents', {
-      "method": "POST",
-      "auth": config.auth,
-      "headers": {
-        "Content-Type": "multipart/mixed"
-      },
-      "qs": {
-        "database": config.database
-      },
-      "multipart": {
-        "chunked": false,
-        "data": [
-          {
-            "Content-Disposition": 'attachment; filename="' + uri + '"',
-            "body": contents
-          }
-        ]
+      if (file.isBuffer()) {
+        contents = file.contents.toString();
       }
-    }).then(function(resp){
-      //console.log('publish success', arguments);
-      cb(null, file);
-    }).catch(function(err){
-      //console.log('publish failed', err);
-      cb(err, file);
-    });
-  });
-}
+      if (file.isStream()) {
+        throw new PluginError(PLUGIN_NAME, 'Streams not yet supported!');
+      }
 
-// Exporting the plugin main function
-module.exports = gulpMLPublisher;
+      var uri = url.parse(path.join('/', file.relative)).path;
+      console.log('uploading file: ' + uri);
+      //console.log(contents);
+
+      return {
+        "Content-Disposition": 'attachment; filename="' + uri + '"',
+        "body": contents
+      };
+    });
+
+    this.buffers = [];
+    if (config.verbose) console.log('==== batch boundry ====');
+
+    if (data.length > 0) {
+      // test
+      // data.unshift({
+      //   "Content-Type": "application/json",
+      //   "Content-Disposition": 'inline; category=metadata',
+      //   "body": JSON.stringify({
+      //     "collections": [ "mlgulp" ]
+      //   })
+      // });
+
+      return request(restUrl + 'v1/documents', {
+        "method": "POST",
+        "auth": config.auth,
+        "headers": {
+          "Content-Type": "multipart/mixed"
+        },
+        "qs": {
+          "database": config.database
+        },
+        "multipart": {
+          "chunked": false,
+          "data": data
+        }
+      });
+    } else {
+      return Promise.resolve();
+    }
+  };
+
+  this.pipe = function(immediate) {
+    var self = this;
+    return through.obj(function(file, enc, cb) {
+      if (file.isNull()) {
+        // return empty file
+        return cb(null, file);
+      }
+      if (config.verbose) console.log('adding', file.relative, 'to buffer');
+      self.buffers.push(file);
+
+      if (immediate || self.buffers.length >= config.batchSize) {
+        self.flush().then(function() {
+          cb(null, file);
+        }).catch(function(err) {
+          cb(err, file);  
+        });
+      } else {
+        cb(null, file);
+      }
+    });
+  };
+};
+
+module.exports = MLPublisher;

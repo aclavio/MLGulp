@@ -1,3 +1,3 @@
 xquery version "1.0-ml";
 (: your code here :)
-fn:doc('test2.xml')
+fn:doc('/sub/sub-file.xml')

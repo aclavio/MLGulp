@@ -8,13 +8,31 @@
   "groupId": "Default",
   "restServiceName": "testapp-rest-service",
   "contentDatabase": "testapp-content-database",
+  "contentMetadata": {
+    "collections": [ "mlgulp" ],
+    "permissions": [
+      {
+        "role-name": "rest-writer",
+        "capabilities": [ "update" ]
+      },
+      {
+        "role-name": "rest-reader",
+        "capabilities": [ "read" ]
+      },
+      {
+        "role-name": "testapp-user-role",
+        "capabilities": [ "read" ]
+      }
+    ]
+  },
   "modulesDatabase": "testapp-modules-database",
   "contentDirectory": "data",
   "modulesDirectory": "src",
+  "batchSize": 10,
   "properties": {
     "APP_NAME": "testapp",
     "APP_PORT": 8066,
-    "HOST_NAME": "localhost.localdomain",
+    "HOST_NAME": "hp8470-2109.marklogic.com",
     "URL_REWRITER": "/roxy/rewrite.xqy",
     "ERROR_HANDLER": "/roxy/error.xqy",
     "AUTHENTICATION": "digest",
