@@ -26,9 +26,12 @@
     ]
   },
   "modulesDatabase": "testapp-modules-database",
+  "modulesMetadata": {
+    "collections": [ "mlgulp" ]
+  },
   "contentDirectory": "data",
   "modulesDirectory": "src",
-  "batchSize": 10,
+  "batchSize": 50,
   "properties": {
     "APP_NAME": "testapp",
     "APP_PORT": 8066,

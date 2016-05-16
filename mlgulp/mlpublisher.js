@@ -16,6 +16,8 @@ const PLUGIN_NAME = 'gulp-mlpublisher';
 var validateConfig = function(config) {
   if (!config) {
     throw new PluginError(PLUGIN_NAME, 'Missing configuration options!');
+  } else if (!config.root) {
+    throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "root"');
   } else if (!config.host) {
     throw new PluginError(PLUGIN_NAME, 'Missing required configuration option "host"');
   } else if (!config.port) {
@@ -58,8 +60,10 @@ var MLPublisher = function(config) {
       if (file.isStream()) {
         throw new PluginError(PLUGIN_NAME, 'Streams not yet supported!');
       }
-
-      var uri = url.parse(path.join('/', file.relative)).path;
+      //console.log('root:', config.root);
+      //console.log('path:', file.path);
+      var relative = file.path.replace(config.root, '');
+      var uri = url.parse(path.join('/', relative)).path;
       console.log('uploading file: ' + uri);
       //console.log(contents);
 
@@ -73,14 +77,14 @@ var MLPublisher = function(config) {
     if (config.verbose) console.log('==== batch boundry ====');
 
     if (data.length > 0) {
-      // test
-      // data.unshift({
-      //   "Content-Type": "application/json",
-      //   "Content-Disposition": 'inline; category=metadata',
-      //   "body": JSON.stringify({
-      //     "collections": [ "mlgulp" ]
-      //   })
-      // });
+      // add metadata
+      if (!_.isEmpty(config.metadata)) {
+        data.unshift({
+          "Content-Type": "application/json",
+          "Content-Disposition": 'inline; category=metadata',
+          "body": JSON.stringify(config.metadata)
+        });
+      }
 
       return request(restUrl + 'v1/documents', {
         "method": "POST",
@@ -108,7 +112,8 @@ var MLPublisher = function(config) {
         // return empty file
         return cb(null, file);
       }
-      if (config.verbose) console.log('adding', file.relative, 'to buffer');
+      
+      if (config.verbose) console.log('adding', file.path, 'to buffer');
       self.buffers.push(file);
 
       if (immediate || self.buffers.length >= config.batchSize) {

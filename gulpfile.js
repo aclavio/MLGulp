@@ -19,31 +19,35 @@ var auth = {
 var httpOptions = {
   "auth": auth
 }
+
+var normalizeRootPath = function(dir) {
+  dir = path.resolve(dir);
+  dir = path.format(path.parse(dir));
+  //console.log(dir);
+  return path.join(dir, '/');
+};
+
+var modulesRoot = normalizeRootPath(config.modulesDirectory);
 var modulesPublisher = new MLPublisher({
   host: config.host,
   port: config.restPort,
   auth: auth,
+  root: modulesRoot,
   database: config.modulesDatabase,
   batchSize: config.batchSize,
+  metadata: config.modulesMetadata,
   verbose: false
 });
+var contentRoot = normalizeRootPath(config.contentDirectory);
 var contentPublisher = new MLPublisher({
   host: config.host,
   port: config.restPort,
   auth: auth,
+  root: contentRoot,
   database: config.contentDatabase,
-  batchSize: config.batchSize
+  batchSize: config.batchSize,
+  metadata: config.contentMetadata,
 });
-
-var requestCallback = function(callback) {
-  return function(err, resp, data) {
-    if (err) {
-      callback(err);
-    } else {
-      callback();
-    }
-  }
-};
 
 gulp.task('default', ['usage']);
 
@@ -198,10 +202,8 @@ gulp.task('deploy-echo', function() {
 });
 
 gulp.task('_deploy-modules', ['deploy-echo'], function() {
-  var modulesRoot = path.join('./', config.modulesDirectory, '/**');
-  console.log('deploying from', modulesRoot, 'to', config.host, '[', config.modulesDatabase, ']');
-  
-  return gulp.src(modulesRoot)
+  console.log('deploying from', modulesRoot, 'to', config.host, '[', config.modulesDatabase, ']');  
+  return gulp.src(modulesRoot + '**')
     .pipe(modulesPublisher.pipe());
 });
 
@@ -214,10 +216,9 @@ gulp.task('deploy-modules', ['_deploy-modules'], function(done) {
 });
 
 gulp.task('_deploy-content', ['deploy-echo'], function() {
-  var contentRoot = path.join('./', config.contentDirectory, '/**');
   console.log('deploying from', contentRoot, 'to', config.host, '[', config.contentDatabase, ']');
 
-  return gulp.src(contentRoot)
+  return gulp.src(contentRoot + '**')
     .pipe(contentPublisher.pipe());
 });
 
@@ -261,14 +262,14 @@ gulp.task('watch-echo', function() {
 });
 
 gulp.task('watch', ['deploy-modules', 'watch-echo'], function() {
-  var modulesRoot = path.join('./', config.modulesDirectory, '/**');
-  return gulp.watch(modulesRoot, function(event) {
+  return gulp.watch(modulesRoot + '**', function(event) {
     //console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
     if (event.type === "added" || event.type === "changed") {
+      //console.log(event);
       gulp.src(event.path)
         .pipe(modulesPublisher.pipe(true));
     } else {
-      console.error('unsupported event type: ', event.type);
+      console.error('unsupported event type: ', event.type, ' - ', event.path);
     }
   });
 });
