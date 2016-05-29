@@ -9,6 +9,7 @@ var path = require('path');
 var url = require('url');
 var Promise = require('promise')
 var PluginError = gutil.PluginError;
+var fs = require('fs');
 
 // Consts
 const PLUGIN_NAME = 'gulp-mlpublisher';
@@ -54,22 +55,20 @@ var MLPublisher = function(config) {
     var data = _.map(this.buffers, function(file) {
       var contents = null;
 
-      if (file.isBuffer()) {
-        contents = file.contents.toString();
-      }
+      //if (file.isBuffer()) {
+      //  contents = file.contents.toString();
+      //}
       if (file.isStream()) {
         throw new PluginError(PLUGIN_NAME, 'Streams not yet supported!');
       }
-      //console.log('root:', config.root);
-      //console.log('path:', file.path);
+
       var relative = file.path.replace(config.root, '');
       var uri = url.parse(path.join('/', relative)).path;
       console.log('uploading file: ' + uri);
-      //console.log(contents);
 
       return {
         "Content-Disposition": 'attachment; filename="' + uri + '"',
-        "body": contents
+        "body": fs.readFileSync(file.path)
       };
     });
 
